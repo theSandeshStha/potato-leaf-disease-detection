@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Potato Leaf Disease Detector</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f9;
+        color: #333;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+
+      .container {
+        background: #fff;
+        padding: 20px 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        max-width: 500px;
+        width: 90%;
+        text-align: center;
+      }
+
+      h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+        color: #0078d4;
+      }
+
+      label {
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: 10px;
+        display: block;
+      }
+
+      input[type="file"] {
+        display: block;
+        margin: 10px auto 20px;
+        padding: 5px;
+      }
+
+      button {
+        background: #0078d4;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+
+      button:hover {
+        background: #005a9e;
+      }
+
+      #result {
+        margin-top: 20px;
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+      }
+
+      #camera-stream {
+        margin-top: 20px;
+        width: 100%;
+        max-width: 480px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Potato Leaf Disease Detector</h1>
+      <form id="upload-form" enctype="multipart/form-data" method="POST">
+        <label for="file-input">Upload an image:</label>
+        <input
+          type="file"
+          id="file-input"
+          name="file"
+          accept="image/*"
+          required
+        />
+
+        <label>Or take a photo:</label>
+        <video id="camera-stream" autoplay></video>
+        <button type="button" id="capture-btn">Capture</button>
+
+        <canvas id="canvas" style="display: none"></canvas>
+        <button type="submit">Predict</button>
+      </form>
+      <h2 id="result"></h2>
+    </div>
+
+    <script>
+      const form = document.getElementById("upload-form");
+      const result = document.getElementById("result");
+      const cameraStream = document.getElementById("camera-stream");
+      const captureBtn = document.getElementById("capture-btn");
+      const canvas = document.getElementById("canvas");
+
+      // Start camera stream
+      navigator.mediaDevices
+        .getUserMedia({ video: true })
+        .then((stream) => {
+          cameraStream.srcObject = stream;
+        })
+        .catch((err) => {
+          console.error("Error accessing camera:", err);
+        });
+
+      // Capture image from video stream
+      captureBtn.addEventListener("click", () => {
+        const ctx = canvas.getContext("2d");
+        canvas.width = cameraStream.videoWidth;
+        canvas.height = cameraStream.videoHeight;
+        ctx.drawImage(cameraStream, 0, 0);
+
+        canvas.toBlob((blob) => {
+          const formData = new FormData();
+          formData.append("file", blob, "capture.png");
+
+          // Submit the form data for prediction
+          fetch("/", {
+            method: "POST",
+            body: formData,
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.error) {
+                result.textContent = data.error;
+              } else {
+                result.textContent = `Predicted: ${
+                  data.predicted_class
+                }, Confidence: ${data.confidence.toFixed(2)}%`;
+              }
+            })
+            .catch((error) => {
+              console.error("Error processing captured image:", error);
+              result.textContent =
+                "An error occurred while processing the image.";
+            });
+        });
+      });
+
+      // Handle form submission for uploaded files
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const formData = new FormData(form);
+
+        try {
+          const response = await fetch("/", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await response.json();
+
+          if (data.error) {
+            result.textContent = data.error;
+          } else {
+            result.textContent = `Predicted: ${
+              data.predicted_class
+            }, Confidence: ${data.confidence.toFixed(2)}%`;
+          }
+        } catch (error) {
+          console.error("Submission error:", error);
+          result.textContent = "An error occurred while processing the image.";
+        }
+      });
+    </script>
+  </body>
+</html>
