@@ -98,48 +98,6 @@ These packages are listed in the `requirements.txt` file.
 - The model processes 256x256 RGB images and outputs predictions for the above classes.
 - Confidence scores indicate the likelihood of each class.
 
-## Code Structure
-
-### 1. `app.py`
-
-**Purpose**: Entry point for the Flask application.
-
-#### Responsibilities:
-
-- **User Input Validation**: Ensures the uploaded file is present and is a valid image.
-- **Image Preprocessing**: Integrates preprocessing functions to prepare images for the model.
-- **Model Inference**: Loads the pre-trained model and predicts the class of the input image.
-- **Result Presentation**: Returns results via:
-  - JSON responses for API interactions.
-  - The web interface for user-friendly interaction.
-
----
-
-### 2. `predict.py`
-
-**Purpose**: Contains helper functions used by `app.py` for image processing and prediction.
-
-#### Responsibilities:
-
-- **Image Resizing and Normalization**: Adjusts input images to the required size and scales pixel values to match the model's expected input format.
-- **Leaf Validation**: Detects if the uploaded image resembles a leaf based on green color ratios.
-- **Prediction Handling**: Interfaces with the model to provide class predictions and confidence scores.
-
----
-
-### 3. `model.py`
-
-**Purpose**: Defines and trains the convolutional neural network (CNN) model.
-
-#### Responsibilities:
-
-- **Model Architecture**: Builds the CNN used for potato leaf classification.
-- **Training Pipeline**: Trains the model using labeled datasets of potato leaf images across three classes:
-  - Early Blight
-  - Late Blight
-  - Healthy
-- **Model Saving**: Saves the trained model to `potato.h5` for deployment and inference.
-
 ## Contributing
 
 Contributions to this project are welcome! To contribute:
